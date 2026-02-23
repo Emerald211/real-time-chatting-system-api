@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        h1 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #joinScreen {
+            text-align: center;
+            padding: 40px;
+        }
+
+        #joinScreen input,
+        #joinScreen select {
+            padding: 15px;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 5px;
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        #joinScreen input::placeholder {
+            color: #888;
+        }
+
+        #customRoomInput {
+            display: none;
+        }
+
+        #joinScreen button {
+            padding: 15px 40px;
+            font-size: 18px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        #joinScreen button:hover {
+            background: #45a049;
+        }
+
+        #chatScreen {
+            display: none;
+        }
+
+        #roomInfo {
+            background: #2a2a2a;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #roomInfo .room-name {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        #roomInfo button {
+            padding: 5px 15px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        #status {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .connected {
+            background: #4CAF50;
+        }
+
+        .disconnected {
+            background: #f44336;
+        }
+
+        #messages {
+            border: 1px solid #333;
+            height: 350px;
+            overflow-y: auto;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #2a2a2a;
+            border-radius: 5px;
+        }
+
+        .message {
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-radius: 5px;
+        }
+
+        .system {
+            color: #888;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .chat {
+            background: #3a3a3a;
+        }
+
+        .chat .username {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .chat .text {
+            color: #fff;
+            margin-left: 5px;
+        }
+
+        #inputArea {
+            display: flex;
+            gap: 10px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        #inputArea button {
+            padding: 12px 25px;
+            font-size: 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .room-list {
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .room-list h3 {
+            margin-bottom: 10px;
+            color: #888;
+            font-size: 14px;
+        }
+
+        .room-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #2a2a2a;
+            color: #fff;
+            border: 2px solid #333;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .room-btn:hover {
+            border-color: #4CAF50;
+        }
+
+        .room-btn.selected {
+            border-color: #4CAF50;
+            background: #3a3a3a;
+        }
+
+        .create-room {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Chat App</h1>
+
+    <div id="authScreen">
+        <h2>Login or Register</h2><br>
+        <input type="email" id="emailInput" placeholder="Email">
+        <input type="password" id="passwordInput" placeholder="Password">
+        <input type="text" id="usernameInput" placeholder="Username (register only)">
+        <button onclick="loginUser()">Login</button>
+        <button onclick="registerUser()">Register</button>
+        <div id="authError" style="color:#f44336;margin-top:10px;"></div>
+    </div>
+    <div id="joinScreen" style="display:none;">
+        <h2>Join a Chat Room</h2><br>
+        <div class="room-list">
+            <h3>Available Rooms:</h3>
+            <div id="roomList">Loading rooms...</div>
+        </div>
+        <div class="create-room" style="display:block;">
+            <input type="text" id="customRoomInput" placeholder="Or create a new room..." style="display:block;">
+            <button id="createRoomBtn" onclick="createRoom()">Create Room</button>
+        </div>
+        <button onclick="joinChat()">Join Chat</button>
+    </div>
+
+    <div id="chatScreen">
+        <div id="roomInfo">
+            <span>Room: <span class="room-name" id="currentRoom">general</span></span>
+            <button onclick="leaveRoom()">Leave Room</button>
+        </div>
+        <div id="status" class="disconnected">Disconnected</div>
+        <div id="onlineUsers" style="margin-bottom:10px;color:#4CAF50;">No users online.</div>
+        <div id="messages"></div>
+        <div id="inputArea">
+            <input type="text" id="messageInput" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        let jwtToken = null;
+        let selectedRoom = 'general';
+        let typingTimeout;
+        let isTyping = false;
+        const typingIndicator = document.createElement('div');
+        typingIndicator.className = 'message system';
+        typingIndicator.id = 'typingIndicator';
+        typingIndicator.style.fontStyle = 'italic';
+
+        const authScreen = document.getElementById('authScreen');
+        const joinScreen = document.getElementById('joinScreen');
+        const chatScreen = document.getElementById('chatScreen');
+        const statusEl = document.getElementById('status');
+        const messagesEl = document.getElementById('messages');
+        const usernameInput = document.getElementById('usernameInput');
+        const emailInput = document.getElementById('emailInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const authError = document.getElementById('authError');
+        const messageInput = document.getElementById('messageInput');
+        const customRoomInput = document.getElementById('customRoomInput');
+        const currentRoomEl = document.getElementById('currentRoom');
+        const roomListEl = document.getElementById('roomList');
+        const onlineUsersEl = document.createElement('div');
+        onlineUsersEl.id = 'onlineUsers';
+        onlineUsersEl.style.marginBottom = '10px';
+        onlineUsersEl.style.color = '#4CAF50';
+        chatScreen.insertBefore(onlineUsersEl, messagesEl);
+
+        async function loginUser() {
+            authError.textContent = '';
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+            if (!email || !password) {
+                authError.textContent = 'Email and password required.';
+                return;
+            }
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (res.ok && data.token) {
+                    jwtToken = data.token;
+                    authScreen.style.display = 'none';
+                    joinScreen.style.display = 'block';
+                    loadRooms();
+                } else {
+                    authError.textContent = data.message || 'Login failed.';
+                }
+            } catch (err) {
+                authError.textContent = 'Login error.';
+            }
+        }
+
+        async function registerUser() {
+            authError.textContent = '';
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+            const username = usernameInput.value.trim();
+            if (!email || !password || !username) {
+                authError.textContent = 'All fields required.';
+                return;
+            }
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, username })
+                });
+                const data = await res.json();
+                if (res.ok && data.token) {
+                    jwtToken = data.token;
+                    authScreen.style.display = 'none';
+                    joinScreen.style.display = 'block';
+                    loadRooms();
+                } else {
+                    authError.textContent = data.message || 'Registration failed.';
+                }
+            } catch (err) {
+                authError.textContent = 'Registration error.';
+            }
+        }
+
+        async function loadRooms() {
+            try {
+                const response = await fetch('/api/rooms', {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(jwtToken ? { 'Authorization': 'Bearer ' + jwtToken } : {})
+                    }
+                });
+                const rooms = await response.json();
+
+                if (rooms.length === 0) {
+                    roomListEl.innerHTML = '<button class="room-btn selected" onclick="selectRoom(\'general\')">general</button>';
+                } else {
+                    roomListEl.innerHTML = rooms.map(room =>
+                        '<button class="room-btn' + (room.name === selectedRoom ? ' selected' : '') + '" onclick="selectRoom(\'' + room.name + '\')">' + room.name + '</button>'
+                    ).join('');
+                }
+            } catch (error) {
+                roomListEl.innerHTML = '<button class="room-btn selected" onclick="selectRoom(\'general\')">general</button>';
+            }
+        }
+
+        function selectRoom(roomName) {
+            selectedRoom = roomName;
+            customRoomInput.value = '';
+            document.querySelectorAll('.room-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.textContent === roomName) {
+                    btn.classList.add('selected');
+                }
+            });
+        }
+
+        function joinChat() {
+            if (!jwtToken) {
+                alert('You must login first!');
+                return;
+            }
+            const customRoom = customRoomInput.value.trim().toLowerCase();
+            const currentRoom = customRoom || selectedRoom;
+            currentRoomEl.textContent = currentRoom;
+            joinScreen.style.display = 'none';
+            chatScreen.style.display = 'block';
+            messagesEl.innerHTML = '';
+            connect(currentRoom);
+        }
+
+        function leaveRoom() {
+            if (ws) ws.close();
+            chatScreen.style.display = 'none';
+            joinScreen.style.display = 'block';
+            usernameInput.value = '';
+            customRoomInput.value = '';
+            selectedRoom = 'general';
+            loadRooms();
+        }
+
+        function showTyping(username) {
+            typingIndicator.textContent = username + ' is typing...';
+            if (!messagesEl.contains(typingIndicator)) {
+                messagesEl.appendChild(typingIndicator);
+            }
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                if (messagesEl.contains(typingIndicator)) messagesEl.removeChild(typingIndicator);
+            }, 2000);
+        }
+
+        function updateOnlineUsers(userIds) {
+            if (!Array.isArray(userIds) || userIds.length === 0) {
+                onlineUsersEl.textContent = 'No users online.';
+                return;
+            }
+            onlineUsersEl.textContent = 'Online: ' + userIds.join(', ');
+        }
+
+        // Update online users on userJoined/userLeft
+        function handleUserJoined(username) {
+            addSystemMessage(username + ' joined');
+            // Request updated online users list
+            ws.send(JSON.stringify({ type: 'getOnlineUsers' }));
+        }
+        function handleUserLeft(username) {
+            addSystemMessage(username + ' left');
+            ws.send(JSON.stringify({ type: 'getOnlineUsers' }));
+        }
+
+        function connect(room) {
+            ws = new WebSocket('ws://localhost:3000');
+
+            ws.onopen = () => {
+                statusEl.textContent = 'Connected';
+                statusEl.className = 'status connected';
+                ws.send(JSON.stringify({ type: 'join', token: jwtToken, room: room }));
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                if (data.type === 'welcome') {
+                    addSystemMessage('Welcome to ' + currentRoomEl.textContent + '!');
+                    if (data.messages && data.messages.length > 0) {
+                        data.messages.forEach(msg => addChatMessage(msg.user.username, msg.text));
+                    }
+                    if (data.onlineUsers) updateOnlineUsers(data.onlineUsers);
+                }
+                if (data.type === 'userJoined') handleUserJoined(data.username);
+                if (data.type === 'userLeft') handleUserLeft(data.username);
+                if (data.type === 'onlineUsers') updateOnlineUsers(data.userIds);
+                if (data.type === 'message') addChatMessage(data.username, data.text);
+                if (data.type === 'error') addSystemMessage('Error: ' + data.message);
+                if (data.type === 'typing') showTyping(data.username);
+            };
+
+            ws.onclose = () => {
+                statusEl.textContent = 'Disconnected';
+                statusEl.className = 'status disconnected';
+            };
+        }
+
+        async function getRoomMessages(roomName) {
+            try {
+                const response = await fetch(`/api/rooms/${roomName}/messages`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(jwtToken ? { 'Authorization': 'Bearer ' + jwtToken } : {})
+                    }
+                });
+                const messages = await response.json();
+                // handle messages as needed
+            } catch (error) {
+                // handle error
+            }
+        }
+
+        async function createRoom() {
+            const roomName = customRoomInput.value.trim();
+            if (!roomName) {
+                addSystemMessage('Room name required.');
+                return;
+            }
+            try {
+                const res = await fetch('/api/rooms', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(jwtToken ? { 'Authorization': 'Bearer ' + jwtToken } : {})
+                    },
+                    body: JSON.stringify({ name: roomName })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    addSystemMessage('Room created: ' + data.name);
+                    loadRooms();
+                    selectRoom(data.name);
+                } else {
+                    addSystemMessage(data.error || 'Failed to create room.');
+                }
+            } catch (err) {
+                addSystemMessage('Error creating room.');
+            }
+        }
+
+        function addSystemMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'message system';
+            div.textContent = text;
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'message', text: text }));
+                messageInput.value = '';
+            }
+        }
+
+        function addChatMessage(username, text) {
+            const div = document.createElement('div');
+            div.className = 'message chat';
+            div.innerHTML = '<span class="username">' + username + ':</span> <span class="text">' + text + '</span>';
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        messageInput.addEventListener('input', () => {
+            if (ws && ws.readyState === WebSocket.OPEN && !isTyping) {
+                ws.send(JSON.stringify({ type: 'typing' }));
+                isTyping = true;
+                setTimeout(() => { isTyping = false; }, 1000);
+            }
+        });
+        usernameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') joinChat(); });
+        messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+        document.querySelector('.create-room input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') createRoom();
+        });
+        document.querySelector('.create-room input').addEventListener('blur', () => {
+            if (customRoomInput.value.trim()) {
+                createRoom();
+            }
+        });
+
+        loadRooms();
+    </script>
+</body>
+
+</html>
